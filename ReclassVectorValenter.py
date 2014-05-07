@@ -7,31 +7,39 @@ arcpy.env.workspace = "C://Data"
 
 ###Make three lists which hold classification table parameters
 
-L = arcpy.GetParameterAsText(2)
-Llist = L.split(";")
+Llist = []
+Ulist = []
+Vlist = []
 
-U = arcpy.GetParameterAsText(3)
-Ulist = U.split(";")
+cursor = arcpy.da.SearchCursor(arcpy.GetParameterAsText(0), [arcpy.GetParameterAsText(1), arcpy.GetParameterAsText(2), arcpy.GetParameterAsText(3)])
+for row in cursor:
+    Llist.append(row[0])
+    Ulist.append(row[1])
+    Vlist.append(row[2])
+del cursor
 
-V = arcpy.GetParamterAsText(4)
-Vlist = V.split(";")
+
 
 ###Make a blank field
 ##Define variables in AddField_management
 #Specify the existing table
-in_table = arcpy.GetParameterAsText(5)
+in_table = arcpy.GetParameterAsText(4)
 #Name the new field
-field_name = arcpy.GetParameterAsText(1)
+field_name = arcpy.GetParameterAsText(7)
+
+out_class = arcpy.GetParameterAsText(6)
+
+arcpy.CopyFeatures_management(in_table, out_class)
 
 ##Execute adding the "Double" field with the defined variables to the table
-arcpy.AddField_management(in_table, field_name, "DOUBLE")
+arcpy.AddField_management(out_class, field_name, "DOUBLE")
 
 
 ###Populate the field
 ##Define Cursor 2
 ##Messages cannot adequately describe the things I did next.  These loops are the result of countless trial and error hours.
-cursor2 = arcpy.da.UpdateCursor([arcpy.GetParameterAsText(5)], [arcpy.GetParameterAsText(0), arcpy.GetParameterAsText(1)])
-    for row2 in cursor2: 
+cursor2 = arcpy.da.UpdateCursor(out_class, [arcpy.GetParameterAsText(5), arcpy.GetParameterAsText(7)])
+for row2 in cursor2: 
         if row2[0] < Llist[0]:
             row2[1] = 9999
             cursor2.updateRow(row2)
@@ -47,3 +55,4 @@ cursor2 = arcpy.da.UpdateCursor([arcpy.GetParameterAsText(5)], [arcpy.GetParamet
                  else:
                      row2[1] = 9999
                      cursor2.updateRow(row2)
+del cursor2
